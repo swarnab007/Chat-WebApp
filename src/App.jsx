@@ -9,6 +9,8 @@ import { AuthContext } from "./context/AuthContext";
 function App() {
   const { currentUser } = useContext(AuthContext);
 
+  // we are creating a protected route if logged out then user will be redirected to login 
+  // page
   const ProtectedRoute = ({ children }) => {
     if (!currentUser) {
       return <Navigate to="/login" />;
