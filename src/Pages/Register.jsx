@@ -44,6 +44,7 @@ const Register = () => {
               displayName,
               email,
               photoURL: downloadURL,
+              friends:[],
             });
             //create empty user chats on firestore
             await setDoc(doc(db, "userChats", res.user.uid), {});

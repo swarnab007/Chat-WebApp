@@ -1,6 +1,6 @@
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Home from "../src/Pages/Home.jsx";
+import Login from "../src/Pages/Login.jsx";
+import Register from "../src/Pages/Register.jsx";
 import "./style.scss";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useContext } from "react";
