@@ -185,12 +185,44 @@
       }
     }
   }
+  .userChatSidebar{
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    background-color: #eadcd9;
+    border: black;
+    &:hover {
+      background-color: gray;
+    }
+    img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .userChatInfo {
+      span {
+        font-size: 18px;
+        font-weight: 500;
+      }
+      p {
+        font-size: 14px;
+      }
+      @include mobile {
+        display: none;
+      }
+    }
+  }
   .userChat {
     padding: 5px;
     display: flex;
     align-items: center;
     gap: 10px;
     cursor: pointer;
+    background-color: #93adec;
+    border: black;
 
     &:hover {
       background-color: gray;
@@ -228,6 +260,18 @@
       padding: 5px;
       color: lightgray;
     }
+    .ChatBanner{
+      height: 972px;
+      width: 900px;
+      background-color: chocolate;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .selectText{
+      font-size:28px
+    }
+
     .chatIcons {
       display: flex;
       gap: 10px;

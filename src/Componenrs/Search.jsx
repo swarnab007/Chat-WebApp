@@ -1,108 +1,128 @@
-import React, { useState, useContext } from "react";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore";
+import React, { useState, useContext, useEffect } from "react";
+import {collection, getDocs, doc, getDoc, setDoc,updateDoc,arrayUnion} from "firebase/firestore";
 import { db } from "../firebase";
 import { AuthContext } from "../context/AuthContext";
+import { ChatContext } from "../context/ChatContext.jsx";
+
 
 const Search = () => {
   const [username, setUsername] = useState("");
-  const [user, setUser] = useState(null);
+  const [allUsers, setAllUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [err, setErr] = useState(false);
+  const [searching, setSearching] = useState(false);
 
   // Getting current user
   const { currentUser } = useContext(AuthContext);
 
-  const handleSearch = async () => {
-    // generating an search query
-    const q = query(
-      collection(db, "users"),
-      where("displayName", "==", username)
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        const usersCollection = collection(db, "users");
+        const usersSnapshot = await getDocs(usersCollection);
+
+        const usersData = [];
+        usersSnapshot.forEach((doc) => {
+          usersData.push(doc.data());
+        });
+
+        setAllUsers(usersData);
+      } catch (error) {
+        console.error("Error fetching all users:", error);
+        setErr(true);
+      }
+    };
+
+    fetchAllUsers();
+  }, []);
+
+  useEffect(() => {
+    if (username.trim() === "") {
+      // If username is empty, clear the filtered users
+      setFilteredUsers([]);
+      return;
+    }
+
+    // Filter users based on the username as it changes
+    const filteredResults = allUsers.filter((user) =>
+        user.displayName.toLowerCase().includes(username.toLowerCase())
     );
-    try {
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach((doc) => {
-        // if there is user
-        setUser(doc.data());
-      });
-    } catch (err) {
-      setErr(true);
+
+    setFilteredUsers(filteredResults);
+  }, [username, allUsers]);
+
+  const handleSelect = async (resultUser) => {
+    let chatroomId;
+    // Handle the selection logic here
+    console.log("CurrentUser=>", currentUser.uid);
+    console.log("ResultUser=>", resultUser.uid);
+
+    if (currentUser.uid !== resultUser.uid) {
+      console.log("Not same");
+      alert("Congratulations");
+      chatroomId = currentUser.uid + resultUser.uid;
+      console.log("NEWID=>", chatroomId);
+
+      try {
+        const record = await getDoc(doc(db, "ChatRoom", chatroomId));
+
+        if (!record.exists()) {
+          // Document doesn't exist, create a new one
+          const response = await setDoc(doc(db, "ChatRoom", chatroomId), {
+            user1: currentUser.uid,
+            user2: resultUser.uid,
+            createdAt: Date.now(),
+            messages: [],
+          });
+          const cuser=doc(db,"users",currentUser.uid);
+          const ruser=doc(db,"users",resultUser.uid);
+          await updateDoc(cuser,{
+            friends:arrayUnion(resultUser.uid),
+            chatroom:arrayUnion(chatroomId)
+          });
+          await updateDoc(ruser,{
+            friends:arrayUnion(currentUser.uid),
+            chatroom:arrayUnion(chatroomId)
+          });
+
+          console.log(response);
+
+        } else {
+          // Document already exists, handle accordingly
+          console.log("Document already exists:", record.data());
+          alert("Found Your chat and fetching your chat");
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    } else {
+      console.log("Ids are the same");
+      alert("Sorry, You cannot select yourself");
     }
   };
 
-  // if user presses enter then go to handleSearch()
-  const handleKey = (e) => {
-    e.code === "Enter" && handleSearch();
-  };
-
-  const handleSelect = async () => {
-    // if there is any chatscollection in firebase , if not then create
-    // we will generate a combinedId for each chats collection
-    const combinedId =
-      currentUser.uid > user.uid
-        ? currentUser.uid + user.uid
-        : user.uid + currentUser.uid;
-    // if not
-    try {
-      const res = await getDoc(doc(db, "chats", combinedId));
-      if (!res.exists()) {
-        // create a chat in chats collection
-        await setDoc(doc(db, "chats", combinedId), { messages: [] });
-        // create user chats
-        await updateDoc(doc(db, "userChats", currentUser.uid), {
-          [combinedId + ".userInfo"]: {
-            uid: currentUser.uid,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-          },
-          [combinedId + ".date"]: serverTimestamp(),
-        });
-        await updateDoc(doc(db, "userChats", user.uid), {
-          [combinedId + ".userInfo"]: {
-            uid: user.uid,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-          },
-          [combinedId + ".date"]: serverTimestamp(),
-        });
-      }
-    } catch (err) {}
-    // deleting the username
-    setUser(null);
-    // deleting the input text
-    setUsername("");
-  };
 
   return (
-    <div className="search">
-      <div className="searchForm">
-        <input
-          type="text"
-          placeholder="search"
-          onKeyDown={handleKey}
-          // setting the Username
-          onChange={(e) => setUsername(e.target.value)}
-          value={username}
-        />
-        {err && <span>Something went wrong !</span>}
-      </div>
-      {user && (
-        <div className="userChat" onClick={handleSelect}>
-          <img src={user.photoURL} alt="" />
-          <div className="userChatInfo">
-            <span>{user.displayName}</span>
-          </div>
+      <div className="search">
+        <div className="searchForm">
+          <input
+              type="text"
+              placeholder="search"
+              onChange={(e) => setUsername(e.target.value)}
+              value={username}
+          />
+          {err && <span>Something went wrong!</span>}
         </div>
-      )}
-    </div>
+        {searching && <span>Searching...</span>}
+        {filteredUsers.map((resultUser) => (
+            <div className="userChat" key={resultUser.uid} onClick={() => handleSelect(resultUser)}>
+              <img src={resultUser.photoURL} alt="" />
+              <div className="userChatInfo">
+                <span>{resultUser.displayName}</span>
+              </div>
+            </div>
+        ))}
+      </div>
   );
 };
 
