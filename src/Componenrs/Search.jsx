@@ -77,10 +77,12 @@ const Search = () => {
           const cuser=doc(db,"users",currentUser.uid);
           const ruser=doc(db,"users",resultUser.uid);
           await updateDoc(cuser,{
-            friends:arrayUnion(resultUser.uid)
+            friends:arrayUnion(resultUser.uid),
+            chatroom:arrayUnion(chatroomId)
           });
           await updateDoc(ruser,{
-            friends:arrayUnion(currentUser.uid)
+            friends:arrayUnion(currentUser.uid),
+            chatroom:arrayUnion(chatroomId)
           });
 
           console.log(response);

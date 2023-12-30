@@ -11,6 +11,7 @@ export const ChatContextProvider = ({ children }) => {
   };
 
   const chatReducer = (state, action) => {
+    console.log("SelectedId=>",action.payload);
     switch (action.type) {
       case "CHANGE_USER":
         return {
