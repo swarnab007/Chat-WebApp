@@ -34,6 +34,7 @@ const SideBarChats = () => {
             uid: friendUid,
             displayName: friendDoc.data().displayName,
             photoURL:friendDoc.data().photoURL
+
             // Add other details as needed
           });
           setFriendData(friendDetails);
@@ -58,8 +59,9 @@ const SideBarChats = () => {
 
   }, [currentUser.uid]);
 
-  const handleSelect = (u) => {
-    dispatch({ type: "CHANGE_USER", payload: u });
+  const handleSelect = (selectedData) => {
+    console.log("USER==>",selectedData);
+    dispatch({ type: "CHANGE_USER", payload: selectedData });
   };
 
   return (

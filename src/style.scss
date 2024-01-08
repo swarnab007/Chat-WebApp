@@ -203,6 +203,8 @@
       object-fit: cover;
     }
     .userChatInfo {
+      display: flex;
+
       span {
         font-size: 18px;
         font-weight: 500;
@@ -212,6 +214,12 @@
       }
       @include mobile {
         display: none;
+      }
+      img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
       }
     }
   }
@@ -267,6 +275,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+
     }
     .selectText{
       font-size:28px

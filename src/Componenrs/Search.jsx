@@ -59,12 +59,13 @@ const Search = () => {
 
     if (currentUser.uid !== resultUser.uid) {
       console.log("Not same");
-      alert("Congratulations");
-      chatroomId = currentUser.uid + resultUser.uid;
+      alert("Congratulations you Guys are now Friends");
+      chatroomId = currentUser.uid +"_"+ resultUser.uid;
       console.log("NEWID=>", chatroomId);
 
       try {
         const record = await getDoc(doc(db, "ChatRoom", chatroomId));
+        console.log("Record Found",record);
 
         if (!record.exists()) {
           // Document doesn't exist, create a new one
@@ -85,7 +86,7 @@ const Search = () => {
             chatroom:arrayUnion(chatroomId)
           });
 
-          console.log(response);
+          console.log("Response=>",response);
 
         } else {
           // Document already exists, handle accordingly

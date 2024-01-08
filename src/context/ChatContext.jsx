@@ -1,25 +1,44 @@
 import { createContext, useContext, useReducer } from "react";
 import { AuthContext } from "./AuthContext";
+import {db} from "../firebase.js";
+import {doc,getDoc,onSnapshot} from "firebase/firestore";
+import * as path from "path";
 
 export const ChatContext = createContext();
 
 export const ChatContextProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext);
   const INITIAL_STATE = {
-    chatId: "null",
-    user: {},
+
+    currentuser: "null",
+    chatroom:"null",
+    selectedUser:false,
   };
 
-  const chatReducer = (state, action) => {
-    console.log("SelectedId=>",action.payload);
+  const ChatroomFinder=async (currentUser,selectedUser)=>{
+    const currentUserRef=doc(db,"users",currentUser);
+    const currentDoc=await getDoc(currentUserRef);
+    const chatrooms=currentDoc.data().chatroom;
+    console.log("Snap=>",currentDoc.data());
+    for(const chatroom of chatrooms ){
+      const splitchat=chatroom.split('_');
+      const id1=splitchat[0];
+      const id2=splitchat[1];
+      if(id1==selectedUser || id2==selectedUser){
+        return chatroom;
+      }
+    }
+
+  }
+  const chatReducer = async (state, action) => {
+
+    const chatroom=await ChatroomFinder(currentUser.uid,action.payload.uid);
     switch (action.type) {
       case "CHANGE_USER":
         return {
-          user: action.payload,
-          chatId:
-            currentUser.uid > action.payload.uid
-              ? currentUser.uid + action.payload.uid
-              : action.payload.uid + currentUser.uid,
+          currentuser: action.payload.uid,
+          chatroom:chatroom,
+          selectedUser:true,
         };
 
       default:
