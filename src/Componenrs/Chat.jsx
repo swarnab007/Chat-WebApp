@@ -6,27 +6,37 @@ import Input from "./Input";
 import Messages from "./Messages";
 import { ChatContext } from "../context/ChatContext";
 import { db } from "../firebase.js";
-import { doc, getDoc } from "firebase/firestore";
+import {arrayUnion, doc, getDoc, updateDoc} from "firebase/firestore";
+import attach from "../images/attach.png";
+import file from "../images/img.png";
+import { AuthContext } from "../context/AuthContext";
+
 
 const Chat = () => {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentSelectedUser, setcurrentSelectedUser] = useState(null);
+  const[chatRoomId,setchatRoomId]=useState("")
   const [selectedUser, setselectedUser] = useState(false);
+  const [inputText,setInputText]=useState("");
   const [loading, setLoading] = useState(false);
   const { data } = useContext(ChatContext);
+  const {currentUser}=useContext(AuthContext);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const chatroomData = await data; // Wait for the promise to resolve
+        console.log(chatroomData);
         setselectedUser(chatroomData.selectedUser);
+        setchatRoomId(chatroomData.chatroom);
         console.log("selected USEr Id", chatroomData.currentuser);
+        console.log("SelectedUSer Details=>",chatroomData);
         const selectedUserRef = doc(db, "users", chatroomData.currentuser);
         console.log("REf=>", selectedUserRef);
         const selectedDoc = await getDoc(selectedUserRef);
-        console.log("Details", selectedDoc);
+        console.log("Details", selectedDoc.data());
         const selectedUserDetails = selectedDoc.data();
-        setCurrentUser(selectedUserDetails);
+        setcurrentSelectedUser(selectedUserDetails);
         setLoading(false); // Set loading to false once data is fetched
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -35,6 +45,47 @@ const Chat = () => {
 
     fetchData();
   }, [data, selectedUser]);
+
+
+  const handleChange = (e) => {
+    setInputText(e.target.value);
+  };
+  const handleSubmit = async (e) => {
+    console.log(inputText);
+    console.log(currentUser.uid);
+    e.preventDefault();
+
+    // Check if inputText has a value
+    if (!inputText) {
+      console.error("Input text is undefined or empty");
+      return;
+    }
+
+    // Assuming inputText contains the message text
+    const newMessage = {
+      text: inputText || "",
+      sender: currentUser.uid,
+      reciver:currentSelectedUser.uid// Assuming this is the sender's user ID
+
+    };
+
+    try {
+      // Update the document in the "ChatRoom" collection
+      console.log(currentSelectedUser);
+      const chatroomref=doc(db,"ChatRoom",chatRoomId);
+      console.log("ChatRoom Ref=>",chatroomref);
+      await updateDoc(chatroomref, {
+        messages: arrayUnion(newMessage),
+      });
+
+      console.log("Message added successfully!");
+      setInputText("");
+    } catch (error) {
+      console.error("Error adding message:", error);
+    }
+
+    // Handle other logic as needed
+  };
 
   return (
       <>
@@ -63,8 +114,8 @@ const Chat = () => {
               >
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <img
-                      src={currentUser?.photoURL}
-                      alt={currentUser?.displayname}
+                      src={currentSelectedUser?.photoURL}
+                      alt={currentSelectedUser?.displayname}
                       style={{
                         width: "40px",
                         height: "40px",
@@ -73,7 +124,7 @@ const Chat = () => {
                       }}
                   />
                   <span style={{ fontSize: "18px", fontWeight: "bold" }}>
-                {currentUser?.displayName}
+                {currentSelectedUser?.displayName}
               </span>
                 </div>
                 <div className="chatIcons" style={{ display: "flex", gap: "10px" }}>
@@ -84,8 +135,22 @@ const Chat = () => {
               </div>
 
               <div>
-                <Messages />
-                <Input />
+                <Messages chatroom={chatRoomId} selectedUser={selectedUser}/>
+                <form onSubmit={handleSubmit}>
+                  <div className="input">
+                    <input
+                        type="text"
+                        placeholder="Type something here..."
+                        value={inputText}
+                        onChange={handleChange}
+                    />
+                    <div className="send">
+                      {/* Your other elements */}
+                      <button type="submit">Send</button>
+                    </div>
+                  </div>
+                </form>
+
               </div>
             </div>
         ) : (

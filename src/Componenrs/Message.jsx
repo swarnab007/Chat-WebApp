@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, {useContext, useState} from "react";
+import {AuthContext} from "../context/AuthContext.jsx";
 
-const Message = () => {
+const Message = ({message}) => {
     const [selected, setSelected] = useState(false);
+    const { currentUser } = useContext(AuthContext);
+    console.log("Current USEr Inside MEssage component",currentUser.uid);
 
     return (
         <>
@@ -12,12 +15,33 @@ const Message = () => {
                         <span>just now</span>
                     </div>
                     <div className="messageContent">
-                        <p>hello</p>
+                        <p>{message}</p>
                         {/* Additional content, such as images, can be added here */}
                     </div>
                 </div>
             ) : (
-                <div>Hello</div>
+                <div
+                    style={{
+                        width: "100%",
+
+
+                        margin: "2px",
+                        display: "flex",
+                    }}
+                >
+                    <div
+                        style={{
+                            fontSize: "25px",
+                            ...(message.sender===currentUser.uid ? {marginLeft: "auto"} : {marginRight: "auto"}),
+                            padding:"10px",
+                            borderRadius:"5px",
+                            ...(message.sender===currentUser.uid ? {backgroundColor: "red"} : {backgroundColor: "#8da4f1"}),
+
+                        }}
+                    >
+                        {message.text}
+                    </div>
+                </div>
             )}
         </>
     );
